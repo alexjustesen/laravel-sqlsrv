@@ -1,6 +1,6 @@
 FROM ubuntu:21.10
 
-LABEL maintainer="Taylor Otwell"
+LABEL maintainer="Alex Justesen"
 
 ARG WWWGROUP
 ARG NODE_VERSION=16
@@ -8,7 +8,6 @@ ARG POSTGRES_VERSION=14
 
 WORKDIR /var/www/html
 
-ENV ACCEPT_EULA=Y
 ENV DEBIAN_FRONTEND noninteractive
 ENV TZ=UTC
 
