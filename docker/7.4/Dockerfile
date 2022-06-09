@@ -1,6 +1,6 @@
 FROM ubuntu:21.10
 
-LABEL maintainer="Taylor Otwell"
+LABEL maintainer="Alex Justesen"
 
 ARG WWWGROUP
 ARG NODE_VERSION=16
@@ -21,8 +21,9 @@ RUN apt-get update \
     && echo "keyserver hkp://keyserver.ubuntu.com:80" >> ~/.gnupg/dirmngr.conf \
     && gpg --recv-key 0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c \
     && gpg --export 0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c > /usr/share/keyrings/ppa_ondrej_php.gpg \
-    && echo "deb [signed-by=/usr/share/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu impish main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
-    && apt-get update \
+    && echo "deb [signed-by=/usr/share/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu impish main" > /etc/apt/sources.list.d/ppa_ondrej_php.list
+
+RUN apt-get update \
     && apt-get install -y php7.4-cli php7.4-dev \
        php7.4-pgsql php7.4-sqlite3 php7.4-gd \
        php7.4-curl php7.4-memcached \
@@ -30,8 +31,21 @@ RUN apt-get update \
        php7.4-xml php7.4-zip php7.4-bcmath php7.4-soap \
        php7.4-intl php7.4-readline php7.4-pcov \
        php7.4-msgpack php7.4-igbinary php7.4-ldap \
-       php7.4-redis php7.4-xdebug \
-    && php -r "readfile('https://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer \
+       php7.4-redis php7.4-xdebug
+
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/ubuntu/21.10/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update -y \
+    && export ACCEPT_EULA=Y \
+    && apt-get install -y msodbcsql17 mssql-tools unixodbc-dev
+
+RUN pecl channel-update pecl.php.net \
+    && pecl install sqlsrv pdo_sqlsrv \
+    && echo "; priority=20\nextension=sqlsrv.so\n" > /etc/php/7.4/mods-available/sqlsrv.ini \
+    && echo "; priority=30\nextension=pdo_sqlsrv.so\n" > /etc/php/7.4/mods-available/pdo_sqlsrv.ini \
+    && phpenmod -v 7.4 sqlsrv pdo_sqlsrv
+
+RUN php -r "readfile('https://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer \
     && curl -sLS https://deb.nodesource.com/setup_$NODE_VERSION.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm \
